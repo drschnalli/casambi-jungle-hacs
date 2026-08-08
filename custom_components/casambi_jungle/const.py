@@ -13,4 +13,5 @@ DEFAULT_TRANSPORT = "mqtt"
 TRANSPORT_MQTT = "mqtt"
 TRANSPORT_HYBRID = "hybrid"
 TRANSPORT_DIRECT = "direct"
+FRONTEND_CARD_REPO = "https://github.com/drschnalli/casambi-jungle-card"
 PLATFORMS = ["sensor", "button", "switch", "light", "binary_sensor"]
