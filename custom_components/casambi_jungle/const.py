@@ -6,4 +6,4 @@ CONF_SCENES = "scenes"
 DEFAULT_NAME = "Casambi Jungle Bridge"
 DEFAULT_BASE_TOPIC = "casambi_bridge"
 DEFAULT_WEB_URL = ""
-PLATFORMS = ["sensor", "button", "switch", "light"]
+PLATFORMS = ["sensor", "button", "switch", "light", "binary_sensor"]

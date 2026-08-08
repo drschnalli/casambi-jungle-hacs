@@ -6,7 +6,8 @@
     "sensor",
     "button",
     "switch",
-    "light"
+    "light",
+    "binary_sensor"
   ],
   "homeassistant": "2024.6.0"
 }

@@ -16,6 +16,9 @@ class CasambiJungleBridgeData:
     web_url: str
     units: list[dict[str, Any]] = field(default_factory=list)
     scenes: list[dict[str, Any]] = field(default_factory=list)
+    light_manager: Any | None = None
+    scene_button_manager: Any | None = None
+    scene_active_manager: Any | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
