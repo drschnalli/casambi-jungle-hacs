@@ -60,7 +60,11 @@ class CasambiJungleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         base_topic = info_data.get(CONF_BASE_TOPIC) or info_data.get("baseTopic") or base_topic
         self._discovered_name = str(name).replace("._casambi-jungle._tcp.local.", "").strip() or DEFAULT_NAME
         self._discovered_base_topic = str(base_topic).strip().strip("/") or DEFAULT_BASE_TOPIC
-        self._discovered_web_url = web_url; self._discovered_host = str(host); self._discovered_port = port; self._discovered_transport = "hybrid"
+        self._discovered_web_url = web_url; self._discovered_host = str(host); self._discovered_port = port; self._discovered_transport = str(info_data.get("mode") or props.get("mode") or "hybrid").strip().lower() or "hybrid"
+        if self._discovered_transport not in {"mqtt", "direct", "hybrid"}:
+            mqtt_enabled = info_data.get("mqtt_enabled")
+            direct_enabled = info_data.get("direct_enabled")
+            self._discovered_transport = "direct" if direct_enabled is True and mqtt_enabled is False else "hybrid"
         units = info_data.get(CONF_UNITS) or []; scenes = info_data.get(CONF_SCENES) or []
         self._discovered_units = list(units) if isinstance(units, list) else []
         self._discovered_scenes = list(scenes) if isinstance(scenes, list) else []

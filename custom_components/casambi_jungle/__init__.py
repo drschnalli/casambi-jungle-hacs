@@ -18,6 +18,7 @@ class CasambiJungleBridgeData:
     scene_button_manager: Any | None = None
     scene_active_manager: Any | None = None
     unit_online_manager: Any | None = None
+    direct_status_poller: Any | None = None
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = CasambiJungleBridgeData(
@@ -33,6 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if data and getattr(data, "direct_status_poller", None):
+        await data.direct_status_poller.async_stop()
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
