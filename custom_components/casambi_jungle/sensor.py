@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, CONF_BASE_TOPIC, CONF_WEB_URL, DEFAULT_BASE_TOPIC, DEFAULT_WEB_URL
+from .const import DOMAIN, CONF_BASE_TOPIC, CONF_WEB_URL, CONF_HOST, CONF_PORT, CONF_TRANSPORT, DEFAULT_BASE_TOPIC, DEFAULT_WEB_URL, DEFAULT_TRANSPORT
 
 @dataclass(frozen=True)
 class CasambiBridgeSensorDefinition:
@@ -34,6 +34,8 @@ SENSORS = (
     CasambiBridgeSensorDefinition("last_sync", "Last API Sync", "diagnostics/last_sync", "mdi:cloud-sync", _plain),
     CasambiBridgeSensorDefinition("active_scene", "Active Scene", "diagnostics/active_scene", "mdi:palette", _plain),
     CasambiBridgeSensorDefinition("web_interface_url", "Web Interface URL", None, "mdi:web", static_key=CONF_WEB_URL),
+    CasambiBridgeSensorDefinition("transport_mode", "Transport Mode", None, "mdi:transit-connection-variant", static_key=CONF_TRANSPORT),
+    CasambiBridgeSensorDefinition("direct_api_url", "Direct API URL", None, "mdi:api", static_key="direct_api_url"),
 )
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
@@ -55,7 +57,15 @@ class CasambiBridgeSensor(SensorEntity):
         return DeviceInfo(identifiers={(DOMAIN, self._entry.entry_id)}, name=self._entry.title, manufacturer="Casambi Jungle", model="Android BLE Bridge")
     async def async_added_to_hass(self) -> None:
         if self._definition.static_key is not None:
-            self._attr_native_value = self._entry.data.get(CONF_WEB_URL, DEFAULT_WEB_URL) or "not configured"
+            if self._definition.static_key == CONF_WEB_URL:
+                self._attr_native_value = self._entry.data.get(CONF_WEB_URL, DEFAULT_WEB_URL) or "not configured"
+            elif self._definition.static_key == CONF_TRANSPORT:
+                self._attr_native_value = self._entry.data.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
+            elif self._definition.static_key == "direct_api_url":
+                web_url = self._entry.data.get(CONF_WEB_URL, DEFAULT_WEB_URL) or ""
+                self._attr_native_value = f"{web_url}/api/info" if web_url else "not configured"
+            else:
+                self._attr_native_value = "unknown"
             self.async_write_ha_state()
             return
         topic = f"{self._base_topic}/{self._definition.topic_suffix}"

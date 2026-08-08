@@ -1,7 +1,7 @@
 {
   "domain": "casambi_jungle",
   "name": "Casambi Jungle Bridge",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "documentation": "https://github.com/drschnalli/casambi-jungle-hacs",
   "issue_tracker": "https://github.com/drschnalli/casambi-jungle-hacs/issues",
   "codeowners": [
@@ -9,12 +9,18 @@
   ],
   "config_flow": true,
   "dependencies": [
-    "mqtt"
+    "mqtt",
+    "zeroconf"
   ],
   "requirements": [],
   "iot_class": "local_push",
   "mqtt": [
     "casambi_bridge/discovery",
     "+/discovery"
+  ],
+  "zeroconf": [
+    {
+      "type": "_casambi-jungle._tcp.local."
+    }
   ]
 }
