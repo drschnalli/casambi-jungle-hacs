@@ -3,9 +3,9 @@ Issues: https://github.com/drschnalli/casambi-jungle-hacs/issues
 
 # Casambi Jungle Bridge for Home Assistant
 
-HACS Custom Integration **v1.4.0** for the Android Casambi Jungle Bridge.
+HACS Custom Integration **v1.5.0** for the Android Casambi Jungle Bridge.
 
-## New in v1.4.0
+## New in v1.5.0
 
 - Fixes dynamic scene detection from Android v0.6.0 MQTT payload format.
 - Supports both scene payload formats:
@@ -57,7 +57,7 @@ PRESS
 ```
 
 
-## Branding in v1.4.0
+## Branding in v1.5.0
 
 This release adds Home Assistant / HACS brand assets in both locations used by current and newer Home Assistant installations:
 

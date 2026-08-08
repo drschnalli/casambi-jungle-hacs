@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, CONF_BASE_TOPIC, CONF_UNITS, DEFAULT_BASE_TOPIC
 
 
-def _normalize_units_payload(payload: Any) -> list[dict[str, Any]]:
+def normalize_units_payload(payload: Any) -> list[dict[str, Any]]:
     """Normalize Android discovery/unit payload into a list of units."""
     if payload is None:
         return []
@@ -54,6 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 
 class CasambiUnitLightManager:
+    """Create and update one light entity per Casambi unit."""
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, base_topic: str, async_add_entities: AddEntitiesCallback) -> None:
         self.hass = hass
         self.entry = entry
@@ -61,25 +63,22 @@ class CasambiUnitLightManager:
         self.async_add_entities = async_add_entities
         self._lights: dict[int, CasambiUnitLight] = {}
         self._unsubscribe_discovery: Callable[[], None] | None = None
+        self._unsubscribe_units: Callable[[], None] | None = None
 
     async def async_start(self) -> None:
-        initial = _normalize_units_payload(self.entry.data.get(CONF_UNITS, []))
+        initial = normalize_units_payload(self.entry.data.get(CONF_UNITS, []))
         if not initial:
             initial = [{"id": 1, "name": "Casambi Unit 1"}]
         self._add_units(initial)
 
         @callback
-        def discovery_received(msg) -> None:
-            units = _normalize_units_payload(msg.payload)
+        def units_payload_received(msg) -> None:
+            units = normalize_units_payload(msg.payload)
             if units:
                 self._add_units(units)
 
-        self._unsubscribe_discovery = await mqtt.async_subscribe(
-            self.hass,
-            f"{self.base_topic}/discovery",
-            discovery_received,
-            qos=0,
-        )
+        self._unsubscribe_discovery = await mqtt.async_subscribe(self.hass, f"{self.base_topic}/discovery", units_payload_received, qos=0)
+        self._unsubscribe_units = await mqtt.async_subscribe(self.hass, f"{self.base_topic}/units", units_payload_received, qos=0)
 
     def _add_units(self, units: list[dict[str, Any]]) -> None:
         new_entities: list[CasambiUnitLight] = []
@@ -113,6 +112,7 @@ class CasambiUnitLight(LightEntity):
         self._is_on = False
         self._brightness = 0
         self._online: bool | None = None
+        self._raw_state: Any = None
         self._unsubscribe: Callable[[], None] | None = None
 
     @property
@@ -129,7 +129,14 @@ class CasambiUnitLight(LightEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {"unit_id": self._unit_id, "unit_name": self._unit_name, "online": self._online}
+        return {
+            "unit_id": self._unit_id,
+            "unit_name": self._unit_name,
+            "online": self._online,
+            "raw_state": self._raw_state,
+            "mqtt_state_topic": f"{self._base_topic}/light/{self._unit_id}/state",
+            "mqtt_command_topic": f"{self._base_topic}/light/{self._unit_id}/set",
+        }
 
     @property
     def device_identifiers(self) -> tuple[str, str, str]:
@@ -165,6 +172,7 @@ class CasambiUnitLight(LightEntity):
             self._brightness = max(0, min(255, brightness))
             self._is_on = state == "ON" and self._brightness > 0
             self._online = data.get("online")
+            self._raw_state = data.get("raw_state")
             self.async_write_ha_state()
 
         self._unsubscribe = await mqtt.async_subscribe(self.hass, topic, message_received, qos=0)
