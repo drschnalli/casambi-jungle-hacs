@@ -12,8 +12,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, CONF_BASE_TOPIC, CONF_UNITS, DEFAULT_BASE_TOPIC, CONF_TRANSPORT
-from .direct_api import direct_available, direct_get_json, CONF_TRANSPORT, CONF_TRANSPORT
+from .const import DOMAIN, CONF_BASE_TOPIC, CONF_UNITS, DEFAULT_BASE_TOPIC
+from .direct_api import direct_available, direct_get_json
 
 
 def normalize_units_payload(payload: Any) -> list[dict[str, Any]]:
