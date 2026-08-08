@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Casambi Jungle Bridge",
+        "description": "Verbindet Home Assistant mit der Android Casambi Jungle Bridge ueber MQTT Topics.",
+        "data": {
+          "name": "Name",
+          "base_topic": "MQTT Basistopic",
+          "web_url": "Webinterface URL"
+        }
+      },
+      "confirm_discovery": {
+        "title": "Casambi Jungle Bridge gefunden",
+        "description": "Gefunden: {name} mit MQTT Basistopic `{base_topic}`."
+      }
+    }
+  }
+}

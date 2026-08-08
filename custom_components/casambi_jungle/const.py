@@ -1,0 +1,9 @@
+DOMAIN = "casambi_jungle"
+CONF_BASE_TOPIC = "base_topic"
+CONF_WEB_URL = "web_url"
+CONF_UNITS = "units"
+CONF_SCENES = "scenes"
+DEFAULT_NAME = "Casambi Jungle Bridge"
+DEFAULT_BASE_TOPIC = "casambi_bridge"
+DEFAULT_WEB_URL = ""
+PLATFORMS = ["sensor", "button", "switch", "light"]

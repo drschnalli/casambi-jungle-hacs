@@ -1,0 +1,12 @@
+{
+  "name": "Casambi Jungle Bridge",
+  "content_in_root": false,
+  "render_readme": true,
+  "domains": [
+    "sensor",
+    "button",
+    "switch",
+    "light"
+  ],
+  "homeassistant": "2024.6.0"
+}
