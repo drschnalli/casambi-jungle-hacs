@@ -1,7 +1,7 @@
 {
   "domain": "casambi_jungle",
   "name": "Casambi Jungle Bridge",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "documentation": "https://github.com/drschnalli/casambi-jungle-hacs",
   "issue_tracker": "https://github.com/drschnalli/casambi-jungle-hacs/issues",
   "codeowners": [

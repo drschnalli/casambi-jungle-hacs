@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     DOMAIN,
@@ -102,13 +103,30 @@ class CasambiJungleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         web_url = props.get(CONF_WEB_URL) or props.get("web_url") or ""
         if not web_url and host and port:
             web_url = f"http://{host}:{port}"
+        info_data: dict = {}
+        if web_url:
+            try:
+                session = async_get_clientsession(self.hass)
+                async with session.get(f"{web_url.rstrip('/')}/api/info", timeout=5) as resp:
+                    if resp.status < 400:
+                        info_data = await resp.json(content_type=None)
+            except Exception:
+                info_data = {}
+        name = info_data.get("name") or name
+        base_topic = info_data.get(CONF_BASE_TOPIC) or info_data.get("baseTopic") or base_topic
+        units = info_data.get(CONF_UNITS) or []
+        scenes = info_data.get(CONF_SCENES) or []
         self._discovered_name = str(name).replace("._casambi-jungle._tcp.local.", "").strip() or DEFAULT_NAME
         self._discovered_base_topic = str(base_topic).strip().strip("/") or DEFAULT_BASE_TOPIC
         self._discovered_web_url = web_url
         self._discovered_host = str(host)
         self._discovered_port = port
         self._discovered_transport = "hybrid"
-        await self.async_set_unique_id(f"zeroconf_{host}_{port}")
+        self._discovered_units = list(units) if isinstance(units, list) else []
+        self._discovered_scenes = list(scenes) if isinstance(scenes, list) else []
+        # Very important: use the same unique id as MQTT discovery.
+        # Otherwise HA sees the MQTT entry and the Zeroconf entry as two different integrations.
+        await self.async_set_unique_id(self._discovered_base_topic)
         self._abort_if_unique_id_configured()
         return await self._show_confirm()
 
