@@ -13,6 +13,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, CONF_BASE_TOPIC, CONF_WEB_URL, CONF_SCENES, DEFAULT_BASE_TOPIC, DEFAULT_WEB_URL
+from .direct_api import direct_available, direct_get_json
 
 
 @dataclass(frozen=True)
@@ -116,6 +117,13 @@ class CasambiBridgeButton(ButtonEntity):
                 )
             return
         if self._definition.command_suffix and self._definition.payload is not None:
+            if direct_available(self._entry):
+                if self._definition.key == "api_fetch":
+                    await direct_get_json(self.hass, self._entry, "/fetch-api")
+                    return
+                if self._definition.key == "restart_bridge":
+                    await direct_get_json(self.hass, self._entry, "/api/restart")
+                    return
             await mqtt.async_publish(
                 self.hass,
                 f"{self._base_topic}/{self._definition.command_suffix}",
@@ -245,4 +253,7 @@ class CasambiSceneButton(ButtonEntity):
             self.async_write_ha_state()
 
     async def async_press(self) -> None:
+        if direct_available(self._entry):
+            await direct_get_json(self.hass, self._entry, f"/api/scene/{self._scene_id}")
+            return
         await mqtt.async_publish(self.hass, f"{self._base_topic}/scene/{self._scene_id}/set", "PRESS", qos=0, retain=False)

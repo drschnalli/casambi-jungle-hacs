@@ -12,7 +12,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, CONF_BASE_TOPIC, CONF_UNITS, DEFAULT_BASE_TOPIC
+from .const import DOMAIN, CONF_BASE_TOPIC, CONF_UNITS, DEFAULT_BASE_TOPIC, CONF_TRANSPORT
+from .direct_api import direct_available, direct_get_json, CONF_TRANSPORT, CONF_TRANSPORT
 
 
 def normalize_units_payload(payload: Any) -> list[dict[str, Any]]:
@@ -114,6 +115,7 @@ class CasambiUnitLight(LightEntity):
         self._online: bool | None = None
         self._raw_state: Any = None
         self._unsubscribe: Callable[[], None] | None = None
+        self._unsub_poll: Callable[[], None] | None = None
 
     @property
     def name(self) -> str | None:
@@ -176,6 +178,31 @@ class CasambiUnitLight(LightEntity):
             self.async_write_ha_state()
 
         self._unsubscribe = await mqtt.async_subscribe(self.hass, topic, message_received, qos=0)
+        if direct_available(self._entry):
+            from datetime import timedelta
+            from homeassistant.helpers.event import async_track_time_interval
+            self._unsub_poll = async_track_time_interval(self.hass, self._poll_direct_status, timedelta(seconds=2))
+            await self._poll_direct_status(None)
+
+    async def _poll_direct_status(self, now) -> None:
+        if not direct_available(self._entry):
+            return
+        data = await direct_get_json(self.hass, self._entry, "/api/status")
+        if not isinstance(data, dict) or data.get("ok") is False:
+            return
+        try:
+            brightness = int(data.get("brightness", 0) or 0)
+        except Exception:
+            brightness = 0
+        state = str(data.get("state", "OFF")).upper()
+        unit_name = data.get("unitName") or data.get("unit_name")
+        if unit_name:
+            self.update_unit_name(str(unit_name))
+        self._brightness = max(0, min(255, brightness))
+        self._is_on = state == "ON" and self._brightness > 0
+        self._online = data.get("online")
+        self._raw_state = data.get("raw") or data.get("raw_state")
+        self.async_write_ha_state()
 
     def update_unit_name(self, unit_name: str) -> None:
         if not unit_name or unit_name == self._unit_name:
@@ -197,12 +224,26 @@ class CasambiUnitLight(LightEntity):
             payload["brightness"] = int(brightness)
         elif self._brightness > 0:
             payload["brightness"] = self._brightness
+        if direct_available(self._entry):
+            params = {"state": "ON"}
+            if "brightness" in payload:
+                params["brightness"] = payload["brightness"]
+            await direct_get_json(self.hass, self._entry, f"/api/light/{self._unit_id}", params)
+            await self._poll_direct_status(None)
+            return
         await mqtt.async_publish(self.hass, f"{self._base_topic}/light/{self._unit_id}/set", json.dumps(payload), qos=0, retain=False)
 
     async def async_turn_off(self, **kwargs) -> None:
+        if direct_available(self._entry):
+            await direct_get_json(self.hass, self._entry, f"/api/light/{self._unit_id}", {"state": "OFF"})
+            await self._poll_direct_status(None)
+            return
         await mqtt.async_publish(self.hass, f"{self._base_topic}/light/{self._unit_id}/set", json.dumps({"state": "OFF"}), qos=0, retain=False)
 
     async def async_will_remove_from_hass(self) -> None:
         if self._unsubscribe is not None:
             self._unsubscribe()
             self._unsubscribe = None
+        if self._unsub_poll is not None:
+            self._unsub_poll()
+            self._unsub_poll = None

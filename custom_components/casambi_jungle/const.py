@@ -10,4 +10,7 @@ DEFAULT_NAME = "Casambi Jungle Bridge"
 DEFAULT_BASE_TOPIC = "casambi_bridge"
 DEFAULT_WEB_URL = ""
 DEFAULT_TRANSPORT = "mqtt"
+TRANSPORT_MQTT = "mqtt"
+TRANSPORT_HYBRID = "hybrid"
+TRANSPORT_DIRECT = "direct"
 PLATFORMS = ["sensor", "button", "switch", "light", "binary_sensor"]
