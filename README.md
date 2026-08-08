@@ -3,9 +3,9 @@ Issues: https://github.com/drschnalli/casambi-jungle-hacs/issues
 
 # Casambi Jungle Bridge for Home Assistant
 
-HACS Custom Integration **v1.2.3** for the Android Casambi Jungle Bridge.
+HACS Custom Integration **v1.3.0** for the Android Casambi Jungle Bridge.
 
-## New in v1.2.3
+## New in v1.3.0
 
 - Fixes dynamic scene detection from Android v0.6.0 MQTT payload format.
 - Supports both scene payload formats:
@@ -55,3 +55,41 @@ Payload:
 ```text
 PRESS
 ```
+
+
+## Branding in v1.3.0
+
+This release adds Home Assistant / HACS brand assets in both locations used by current and newer Home Assistant installations:
+
+```text
+brand/
+  icon.png
+  dark_icon.png
+  icon@2x.png
+  dark_icon@2x.png
+  logo.png
+  dark_logo.png
+  logo@2x.png
+  dark_logo@2x.png
+
+custom_components/casambi_jungle/brand/
+  icon.png
+  dark_icon.png
+  icon@2x.png
+  dark_icon@2x.png
+  logo.png
+  dark_logo.png
+  logo@2x.png
+  dark_logo@2x.png
+```
+
+The direct legacy files remain available as well:
+
+```text
+icon.png
+logo.png
+custom_components/casambi_jungle/icon.png
+custom_components/casambi_jungle/logo.png
+```
+
+If Home Assistant still shows `icon not available`, clear the HACS cache/reload the repository and restart Home Assistant after installing this version.
